@@ -1,76 +1,105 @@
-# Simple FastAPI Task Manager API
+# FastAPI Task Manager API with Authentication
 
-A simple REST API built using **FastAPI**, **SQLAlchemy**, and **SQLite** for managing tasks.
+## Overview
+
+This project is a **Task Manager REST API** built with **FastAPI**. It implements **JWT-based Authentication and Authorization**, allowing users to securely manage their own tasks.
 
 ## Features
 
-- Create a task
-- Get all tasks
-- Get a task by ID
-- Update a task
-- Delete a task
+- User Registration
+- User Login with JWT Authentication
+- Password Hashing using bcrypt
+- Protected Routes
+- Create, Read, Update, and Delete Tasks
+- User-specific Task Management
+- SQLite Database with SQLAlchemy ORM
+- Interactive Swagger API Documentation
 
 ## Technologies Used
 
-- Python 3.x
 - FastAPI
-- SQLAlchemy
+- Python
 - SQLite
+- SQLAlchemy
+- Pydantic
+- Passlib (bcrypt)
+- Python-JOSE (JWT)
 - Uvicorn
+
+## Project Structure
+
+```text
+FastAPI_Task_Manager/
+│
+├── app/
+│   ├── routes/
+│   ├── main.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── crud.py
+│   ├── database.py
+│   ├── oauth2.py
+│   └── utils.py
+│
+├── requirements.txt
+├── README.md
+└── taskmanager.db
+```
 
 ## Installation
 
-1. Clone the repository:
-
 ```bash
-git clone https://github.com/SuryaPrakashS368/Simple-FastAPI-Task-Manager-API.git
-```
+git clone <repository-url>
 
-2. Navigate to the project:
+cd FastAPI_Task_Manager
 
-```bash
-cd Simple-FastAPI-Task-Manager-API
-```
-
-3. Create a virtual environment:
-
-```bash
 python -m venv venv
-```
 
-4. Activate the virtual environment:
-
-Windows:
-
-```bash
 venv\Scripts\activate
-```
 
-5. Install dependencies:
-
-```bash
 pip install -r requirements.txt
-```
 
-6. Start the server:
-
-```bash
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 
 ## API Documentation
 
-Swagger UI:
+Swagger UI
 
 ```
 http://127.0.0.1:8000/docs
 ```
 
-ReDoc:
+ReDoc
 
 ```
 http://127.0.0.1:8000/redoc
 ```
+
+---
+
+## API Endpoints
+
+### Authentication
+
+- `POST /auth/signup` – Register a new user
+- `POST /auth/login` – Login and get JWT token
+- `GET /auth/me` – Get current user
+
+### Tasks
+
+- `POST /tasks` – Create a task
+- `GET /tasks` – Get all tasks
+- `GET /tasks/{id}` – Get a task by ID
+- `PUT /tasks/{id}` – Update a task
+- `DELETE /tasks/{id}` – Delete a task
+
+## Security
+
+- JWT Authentication
+- Password Hashing (bcrypt)
+- User-specific Authorization
+- Protected Task Endpoints
 
 ## Author
 
