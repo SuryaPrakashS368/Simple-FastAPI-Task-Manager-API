@@ -15,3 +15,11 @@ def verify_password(plain_password, hashed_password):
         plain_password,
         hashed_password
     )
+
+def send_task_assignment_email(
+    email,
+    task
+):
+    print(
+        f"Email sent to {email} for task {task.title}"
+    )
