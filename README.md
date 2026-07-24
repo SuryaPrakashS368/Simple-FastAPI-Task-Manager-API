@@ -1,44 +1,87 @@
-# FastAPI Task Manager API
+# FastAPI Project Management API
 
-A simple Project Management API built using **FastAPI**, **SQLAlchemy**, **SQLite**, and **JWT Authentication**.
+A Project Management REST API built using **FastAPI**, **SQLAlchemy**, and **SQLite**. It includes JWT Authentication, Role-Based Access Control (RBAC), Project and Task Management, Activity Logs, Notifications, and Analytics.
 
 ## Features
 
-- User Signup
-- User Login with JWT Authentication
-- Create, Update, View and Delete Projects
-- Create, Update, View and Delete Tasks
-- Role-Based Access Control (RBAC)
-- Task Assignment
-- Soft Delete
-- Swagger API Documentation
+- JWT Authentication
+- Role-Based Access Control (Admin, Manager, Member)
+- User Management
+- Project Management
+- Task Management
+- Project Member Management
+- Activity Logs
+- Notifications
+- Audit Logs
+- Analytics
+- Soft Delete for Projects and Tasks
 
-## Technologies Used
+## Tech Stack
 
 - Python
 - FastAPI
 - SQLAlchemy
 - SQLite
-- Alembic
+- Pydantic
 - JWT Authentication
 - Uvicorn
 
+## Project Structure
+
+```text
+FastAPI_Task_Manager/
+│
+├── app/
+│   ├── Crud/
+│   │   ├── activity.py
+│   │   ├── analytics.py
+│   │   ├── auditLog.py
+│   │   ├── notification.py
+│   │   ├── project.py
+│   │   ├── project_member.py
+│   │   ├── task.py
+│   │   └── user.py
+│   │
+│   ├── routes/
+│   │   ├── activity.py
+│   │   ├── analytics.py
+│   │   ├── auth.py
+│   │   ├── notification.py
+│   │   ├── project_members.py
+│   │   ├── projects.py
+│   │   ├── task.py
+│   │   └── user.py
+│   │
+│   ├── models.py
+│   ├── schemas.py
+│   ├── database.py
+│   ├── oauth2.py
+│   ├── utils.py
+│   ├── dependencies.py
+│   ├── middleware.py
+│   └── main.py
+│
+├── alembic/
+├── requirements.txt
+└── README.md
+```
+
 ## Installation
 
-### 1. Clone the Repository
+1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone <your-repository-url>
 cd FastAPI_Task_Manager
 ```
 
-### 2. Create a Virtual Environment
+2. Create a virtual environment
 
 ```bash
 python -m venv venv
 ```
 
-### 3. Activate the Virtual Environment
+3. Activate the virtual environment
 
 **Windows**
 
@@ -46,19 +89,19 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-**Linux / macOS**
-
-```bash
-source venv/bin/activate
-```
-
-### 4. Install Dependencies
+4. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Run the Application
+5. Run database migrations
+
+```bash
+alembic upgrade head
+```
+
+6. Start the server
 
 ```bash
 uvicorn app.main:app --reload
@@ -66,61 +109,16 @@ uvicorn app.main:app --reload
 
 ## API Documentation
 
-Swagger UI:
+Swagger UI
 
 ```
 http://127.0.0.1:8000/docs
 ```
 
-ReDoc:
+ReDoc
 
 ```
 http://127.0.0.1:8000/redoc
-```
-
-## Authentication
-
-### Signup
-
-```
-POST /auth/signup
-```
-
-### Login
-
-```
-POST /auth/login
-```
-
-After successful login, use the generated JWT token to access protected APIs.
-
-## Project Structure
-
-```
-FastAPI_Task_Manager/
-│
-├── alembic/
-│
-├── app/
-│   ├── database.py
-│   ├── models.py
-│   ├── schemas.py
-│   ├── crud.py
-│   ├── oauth2.py
-│   ├── dependencies.py
-│   ├── middleware.py
-│   ├── exceptions.py
-│   ├── main.py
-│   │
-│   └── routes/
-│       ├── user.py
-│       ├── projects.py
-│       ├── task.py
-│       ├── project_members.py
-│       └── analytics.py
-│
-├── requirements.txt
-└── README.md
 ```
 
 ## Author
