@@ -125,3 +125,65 @@ class ProjectMemberResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# -------------------------
+# Notification
+# -------------------------
+
+class NotificationResponse(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    message: str
+    is_read: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True        
+
+
+class NotificationRead(BaseModel):
+    is_read: bool = True
+
+# -------------------------
+# Activity
+# -------------------------
+
+class ActivityLogResponse(BaseModel):
+    id: int
+    user_id: int
+    action: str
+    entity_type: str
+    entity_id: int
+    description: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# -------------------------
+# Audit
+# -------------------------
+
+class AuditLogResponse(BaseModel):
+    id: int
+    entity_type: str
+    entity_id: int
+    field_name: str
+    old_value: str | None = None
+    new_value: str | None = None
+    changed_by: int
+    changed_at: datetime
+
+    class Config:
+        from_attributes = True        
+
+# -------------------------
+# ActivityFilter
+# -------------------------
+
+class ActivityFilter(BaseModel):
+    action: str | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None

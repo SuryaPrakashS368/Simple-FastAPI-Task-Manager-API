@@ -5,8 +5,10 @@ from app.database import SessionLocal
 from app import schemas
 from app.dependencies import allow_roles
 from app.oauth2 import get_current_user
-from app.crud import create_log
-from app import crud
+from app.Crud.activity import create_activity_log
+from app.Crud.notification import create_notification
+from app.Crud.auditLog import create_audit_log
+from app.Crud import Task
 
 router = APIRouter(
     prefix="/tasks",
@@ -28,14 +30,34 @@ def create_task(
     db: Session = Depends(get_db),
     current_user=Depends(allow_roles(["Admin", "Manager"]))
 ):
-    new_task = crud.create_task(db, task)
+    new_task = Task.create_task(db, task,current_user)
 
-    create_log(
+    create_activity_log(
+    db=db,
+    user_id=current_user.id,
+    action="TASK_CREATED",
+    entity_type="Task",
+    entity_id=new_task.id,
+    description=f"Task '{task.title}' created."
+    )
+
+    if task.assigned_to:
+
+        create_notification(
+        db=db,
+        user_id=task.assigned_to,
+        title="Task Assigned",
+        message=f"You have been assigned '{task.title}'."
+        )
+
+        create_activity_log(
         db=db,
         user_id=current_user.id,
-        action="CREATE_TASK",
-        description=f"Created task '{new_task.title}'"
-    )
+        action="TASK_ASSIGNED",
+        entity_type="Task",
+        entity_id=new_task.id,
+        description=f"Task '{task.title}' assigned."
+        )
 
     return new_task
 
@@ -49,7 +71,7 @@ def get_tasks(
     current_user=Depends(get_current_user)
 ):
 
-    return crud.get_tasks(
+    return Task.get_tasks(
         db,
         status,
         priority,
@@ -64,7 +86,7 @@ def get_task(
     current_user=Depends(get_current_user)
 ):
 
-    task = crud.get_task(db, task_id)
+    task = Task.get_task(db, task_id)
 
     if task is None:
         raise HTTPException(404, "Task not found")
@@ -80,7 +102,7 @@ def update_task(
     current_user=Depends(get_current_user)
 ):
 
-    db_task = crud.get_task(db, task_id)
+    db_task = Task.get_task(db, task_id)
 
     if db_task is None:
         raise HTTPException(404, "Task not found")
@@ -96,15 +118,93 @@ def update_task(
         task.due_date = None
         task.title = None
         task.description = None
-    
-    updated_task = crud.update_task(db, task_id, task)
 
-    create_log(
-    db=db,
-    user_id=current_user.id,
-    action="UPDATE_TASK",
-    description=f"Updated task '{updated_task.title}'"
-    )
+    old_task = Task.get_task(db, task_id)
+    old_priority = old_task.priority
+    old_status = db_task.status
+    old_due_date = db_task.due_date
+    old_assigned_to = db_task.assigned_to
+
+    updated_task = Task.update_task(db, task_id, task)
+
+    if old_priority != updated_task.priority:
+
+        create_audit_log(
+        db=db,
+        entity_type="Task",
+        entity_id=updated_task.id,
+        field_name="priority",
+        old_value=old_priority,
+        new_value=updated_task.priority,
+        changed_by=current_user.id
+        )
+
+    if old_status != updated_task.status:
+
+        create_activity_log(
+        db=db,
+        user_id=current_user.id,
+        action="TASK_STATUS_CHANGED",
+        entity_type="Task",
+        entity_id=updated_task.id,
+        description=f"Status changed from {old_status} to {updated_task.status}"
+        )
+
+        create_audit_log(
+        db=db,
+        entity_type="Task",
+        entity_id=updated_task.id,
+        field_name="status",
+        old_value=old_status,
+        new_value=updated_task.status,
+        changed_by=current_user.id
+        )
+
+        create_notification(
+        db=db,
+        user_id=updated_task.assigned_to,
+        title="Task Status Updated",
+        message=f"Task '{updated_task.title}' is now {updated_task.status}."
+        )
+
+    if old_due_date != updated_task.due_date:
+
+        create_activity_log(
+        db=db,
+        user_id=current_user.id,
+        action="TASK_DEADLINE_UPDATED",
+        entity_type="Task",
+        entity_id=updated_task.id,
+        description="Task deadline updated."
+        )
+
+        create_audit_log(
+        db=db,
+        entity_type="Task",
+        entity_id=updated_task.id,
+        field_name="due_date",
+        old_value=str(old_due_date),
+        new_value=str(updated_task.due_date),
+        changed_by=current_user.id
+        )   
+
+    if old_assigned_to != updated_task.assigned_to:
+
+        create_activity_log(
+        db=db,
+        user_id=current_user.id,
+        action="TASK_REASSIGNED",
+        entity_type="Task",
+        entity_id=updated_task.id,
+        description=f"Task '{updated_task.title}' reassigned."
+        )
+
+        create_notification(
+        db=db,
+        user_id=updated_task.assigned_to,
+        title="Task Reassigned",
+        message=f"You have been assigned '{updated_task.title}'."
+        )
 
     return updated_task
 
@@ -116,11 +216,14 @@ def delete_task(
     current_user=Depends(allow_roles(["Admin", "Manager"]))
 ):
 
-    task = crud.delete_task(db, task_id)
-    create_log(
+    task = Task.delete_task(db, task_id)
+    
+    create_activity_log(
     db=db,
     user_id=current_user.id,
     action="DELETE_TASK",
+    entity_type="Task",
+    entity_id=task.id,
     description=f"Deleted task '{task.title}'"
     )
     if task is None:

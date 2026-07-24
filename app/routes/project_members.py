@@ -6,7 +6,11 @@ from app.database import SessionLocal
 from app.dependencies import allow_roles
 from app.oauth2 import get_current_user
 from app import schemas
-from app import crud
+from app.Crud import projectMember
+from app.Crud.activity import create_activity_log
+from app.Crud.notification import create_notification
+from app.Crud.auditLog import create_audit_log
+
 router = APIRouter(
     prefix="/projects",
     tags=["Project Members"]
@@ -37,7 +41,7 @@ def add_project_member(
     )
 ):
 
-    member = crud.add_member(
+    member = projectMember.add_member(
         db,
         project_id,
         request.user_id
@@ -49,6 +53,21 @@ def add_project_member(
             detail="User already exists in project"
         )
 
+    create_activity_log(
+    db=db,
+    user_id=current_user.id,
+    action="MEMBER_ADDED",
+    entity_type="Project",
+    entity_id=project_id,
+    description="Member added to project."
+    )
+
+    create_notification(
+    db=db,
+    user_id=current_user.id,
+    title="Project Invitation",
+    message="You have been added to the project."
+    )
     return member
 
 
@@ -63,7 +82,7 @@ def get_project_members(
     current_user=Depends(get_current_user)
 ):
 
-    return crud.get_members(
+    return projectMember.get_members(
         db,
         project_id
     )
@@ -84,7 +103,7 @@ def remove_member(
     )
 ):
 
-    member = crud.remove_member(
+    member = projectMember.remove_member(
         db,
         project_id,
         user_id

@@ -8,7 +8,8 @@ from ..oauth2 import get_current_user
 from .. import models
 from ..database import get_db
 from .. import schemas
-from .. import crud
+from app.Crud import User
+from app.Crud.activity import create_activity_log
 
 router = APIRouter(
     prefix="/auth",
@@ -25,7 +26,7 @@ def signup(
     db: Session = Depends(get_db)
 ):
 
-    existing_user = crud.get_user_by_email(
+    existing_user = User.get_user_by_email(
         db,
         user.email
     )
@@ -36,7 +37,7 @@ def signup(
             detail="Email already registered"
         )
 
-    return crud.create_user(
+    return User.create_user(
         db,
         user
     )
@@ -51,7 +52,7 @@ def login(
     db: Session = Depends(get_db)
 ):
 
-    user = crud.authenticate_user(
+    user = User.authenticate_user(
         db,
         user_credentials.username,
         user_credentials.password
@@ -67,6 +68,15 @@ def login(
         data={
             "id": user.id
         }
+    )
+    
+    create_activity_log(
+    db=db,
+    user_id=user.id,
+    action="LOGIN",
+    entity_type="User",
+    entity_id=user.id,
+    description=f"{user.full_name} logged into the system."
     )
 
     return {

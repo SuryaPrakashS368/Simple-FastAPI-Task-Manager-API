@@ -9,6 +9,9 @@ from .routes.task import router as task_router
 from .routes.projects import router as projects_router
 from .routes.project_members import router as project_members_router
 from .routes.analytics import router as analytics_router
+from app.routes.notification import router as notification_router
+from app.routes.activity import router as activity_router
+from app.routes.auditLog import router as audit_router
 from app.exceptions import global_exception_handler
 
 # Base.metadata.create_all(bind=engine)
@@ -24,6 +27,9 @@ app.include_router(task_router)
 app.include_router(projects_router)
 app.include_router(project_members_router)
 app.include_router(analytics_router)
+app.include_router(notification_router)
+app.include_router(activity_router)
+app.include_router(audit_router)
 app.add_exception_handler(
     Exception,
     global_exception_handler

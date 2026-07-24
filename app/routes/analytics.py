@@ -7,7 +7,7 @@ from app.database import SessionLocal
 
 from app.dependencies import allow_roles
 
-from app.crud import project_summary
+from app.Crud.analytics import project_summary
 
 router = APIRouter(
     prefix="/analytics",

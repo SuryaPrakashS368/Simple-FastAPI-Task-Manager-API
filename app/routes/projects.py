@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 from fastapi import Query
 from app.database import SessionLocal
 from app import schemas
-from app import crud
-from app.crud import create_log
+from app.Crud import Project
+from app.Crud.activity import create_activity_log
+from app.Crud.auditLog import create_audit_log
 from app.dependencies import allow_roles
 
 router = APIRouter(
@@ -37,18 +38,21 @@ def create_project(
     )
 ):
 
-    new_project = crud.create_project(
+    new_project = Project.create_project(
         db,
         project,
         current_user.id
     )
 
-    create_log(
-        db=db,
-        user_id=current_user.id,
-        action="CREATE_PROJECT",
-        description=f"Created project '{new_project.name}'"
+    create_activity_log(
+    db=db,
+    user_id=current_user.id,
+    action="PROJECT_CREATED",
+    entity_type="Project",
+    entity_id=new_project.id,
+    description=f"Project '{project.name}' created."
     )
+
     return new_project
 
 
@@ -68,7 +72,7 @@ def get_projects(
 
 ):
 
-    return crud.get_projects(
+    return Project.get_projects(
         db,
         skip,
         limit,
@@ -90,7 +94,7 @@ def get_project(
 
 ):
 
-    project = crud.get_project(
+    project = Project.get_project(
         db,
         project_id
     )
@@ -119,17 +123,14 @@ def update_project(
     )
 
 ):
+    old_project = Project.get_project(db, project_id)
+    old_description = old_project.description
 
-    updated = crud.update_project(
+    updated = Project.update_project(
         db,
         project_id,
-        project
-    )
-    create_log(
-    db=db,
-    user_id=current_user.id,
-    action="UPDATE_PROJECT",
-    description=f"Updated project '{updated.name}'"
+        project,
+        current_user
     )
     if updated is None:
 
@@ -137,6 +138,36 @@ def update_project(
             status_code=404,
             detail="Project not found"
         )
+    if old_description != updated.description:
+
+        create_audit_log(
+        db=db,
+        entity_type="Project",
+        entity_id=updated.id,
+        field_name="description",
+        old_value=old_description,
+        new_value=updated.description,
+        changed_by=current_user.id
+        )
+
+    create_activity_log(
+    db=db,
+    user_id=current_user.id,
+    action="PROJECT_UPDATED",
+    entity_type="Project",
+    entity_id=updated.id,
+    description=f"Project '{project.name}' updated."
+    )
+
+    create_audit_log(
+    db=db,
+    entity_type="Project",
+    entity_id=updated.id,
+    field_name="description",
+    old_value=project.description,
+    new_value=updated.description,
+    changed_by=current_user.id
+)
 
     return updated
 
@@ -145,6 +176,7 @@ def update_project(
 
 def delete_project(
     project_id: int,
+    project: schemas.ProjectCreate,
     db: Session = Depends(get_db),
     current_user=Depends(
         allow_roles(["Admin"])
@@ -152,22 +184,27 @@ def delete_project(
 
 ):
 
-    deleted = crud.delete_project(
+    deleted = Project.delete_project(
         db,
-        project_id
+        project_id,
+        current_user.id
     )
-    create_log(
-    db=db,
-    user_id=current_user.id,
-    action="DELETE_PROJECT",
-    description=f"Deleted project '{deleted.name}'"
-    )
+
     if deleted is None:
 
         raise HTTPException(
             status_code=404,
             detail="Project not found"
         )
+        
+    create_activity_log(
+    db=db,
+    user_id=current_user.id,
+    action="PROJECT_DELETED",
+    entity_type="Project",
+    entity_id=deleted.id,
+    description=f"Project '{project.name}' deleted."
+    )
 
     return {
         "message": "Project deleted successfully"
